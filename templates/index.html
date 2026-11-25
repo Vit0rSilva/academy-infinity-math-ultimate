@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Academy Infinite Math Ultimate - Modelagem & Simulação Matemática</title>
+  <meta name="description" content="Plataforma interativa de Modelagem e Simulação Matemática com módulos, quizzes e acompanhamento de progresso.">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body data-authenticated="{{ 'true' if current_user else 'false' }}" data-unlocked-count="{{ [stats.completed_modules + 1, stats.total_modules]|min if current_user else 0 }}">
+  <!-- Faixa Superior com Cores do Brasil & Bahia -->
+  <div class="top-brazil-bahia-bar"></div>
+
+  <!-- Cabeçalho Estilo Busuu -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand-box">
+        <div class="brand-icon">∞</div>
+        <div class="brand-text">
+          <h1>Academy Infinite Math Ultimate</h1>
+          <span class="sub-badge">Unijorge • Salvador - Bahia • 2026</span>
+        </div>
+      </div>
+
+      <nav class="nav-links">
+        <a href="#modulos" class="nav-item active">📚 Módulos & Níveis</a>
+        {% if current_user %}
+        <a href="#videos" class="nav-item">🎥 Aulas YouTube</a>
+        <a href="#tutor-ia" class="nav-item tutor-nav-highlight">🤖 Camile Dias IA</a>
+        <a href="#lab-simuladores" class="nav-item">🧪 Simuladores</a>
+        <a href="#exercicios" class="nav-item">💡 Exercícios</a>
+        <a href="#quiz" class="nav-item">🎯 Quiz por Nível</a>
+        <a href="{{ url_for('dashboard') }}" class="nav-item">📊 Meu Painel</a>
+        {% endif %}
+        <a href="{{ url_for('modules_page') }}" class="nav-item">🧭 Trilha Completa</a>
+        {% if current_user %}<a href="#certificado" class="nav-item cert-link">🎓 Certificado</a>{% endif %}
+      </nav>
+
+      <div class="user-controls">
+        <div class="user-stats">
+          <div class="stat-pill streak" title="Ofensiva de estudos">🔥 <span id="streakCount">{{ stats.streak }}</span></div>
+          <div class="stat-pill xp" title="Experiência acumulada">⚡ <span id="xpPoints">{{ stats.xp }}</span> XP</div>
+        </div>
+        {% if current_user %}
+        <a id="authTriggerBtn" class="btn-login-nav logged-in" href="{{ url_for('dashboard') }}">
+          <span id="navUserIcon">👤</span>
+          <span id="navUserText">{{ current_user.name.split(' ')[0] }}</span>
+        </a>
+        {% else %}
+        <button id="authTriggerBtn" class="btn-login-nav" onclick="openAuthModal()"><span id="navUserIcon">👤</span><span id="navUserText">Entrar</span></button>
+        {% endif %}
+      </div>
+    </div>
+  </header>
+
+  <!-- Modal de Login e Cadastro (Redes Sociais, GitHub, Login e Senha) -->
+  <div id="authModal" class="modal-overlay hidden" onclick="closeAuthModalOutside(event)">
+    <div class="modal-card">
+      <button class="modal-close" onclick="closeAuthModal()" aria-label="Fechar janela">&times;</button>
+      
+      <div class="modal-header">
+        <div class="modal-logo">∞</div>
+        <h2 id="modalTitle">Academy Infinite Math Ultimate</h2>
+        <p id="modalSubtitle">Entre ou crie uma conta para liberar as aulas, salvar XP, manter sua ofensiva e avançar pela trilha.</p>
+      </div>
+
+      <!-- Opções de Login com Redes Sociais e GitHub -->
+      <div class="social-auth-group hidden">
+        <button type="button" class="btn-social btn-github" onclick="socialLogin('GitHub', 'LuanEngenheiroBA')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          Continuar com GitHub
+        </button>
+
+        <button type="button" class="btn-social btn-google" onclick="socialLogin('Google', 'Luan Gabriel Lins Galvão')">
+          <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#EA4335" d="M12 5c1.617 0 3.077.556 4.223 1.648l3.168-3.168C17.477 1.694 14.977.667 12 .667 7.573.667 3.743 3.204 1.883 6.91l3.69 2.863C6.447 7.152 8.993 5 12 5z"/><path fill="#4285F4" d="M23.49 12.275c0-.85-.075-1.675-.215-2.475H12v4.685h6.445c-.28 1.495-1.125 2.765-2.395 3.615l3.875 3.005c2.265-2.085 3.565-5.16 3.565-8.83z"/><path fill="#FBBC05" d="M5.573 14.227A7.19 7.19 0 0 1 5.195 12c0-.775.135-1.525.378-2.227L1.883 6.91A11.96 11.96 0 0 0 .667 12c0 1.935.465 3.765 1.216 5.09l3.69-2.863z"/><path fill="#34A853" d="M12 23.333c3.24 0 5.955-1.075 7.94-2.908l-3.875-3.005c-1.075.72-2.45 1.147-4.065 1.147-3.007 0-5.553-2.152-6.427-4.773l-3.69 2.863C3.743 20.796 7.573 23.333 12 23.333z"/></svg>
+          Continuar com Google
+        </button>
+
+        <button type="button" class="btn-social btn-linkedin" onclick="socialLogin('LinkedIn', 'Luan Gabriel Lins Galvão')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+          Continuar com LinkedIn
+        </button>
+
+        <button type="button" class="btn-social btn-facebook" onclick="socialLogin('Facebook', 'Estudante Unijorge')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M22.675 0h-21.35c-.732 0-1.325.593-1.325 1.325v21.351c0 .731.593 1.324 1.325 1.324h11.495v-9.294h-3.128v-3.622h3.128v-2.671c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12v9.293h6.116c.73 0 1.323-.593 1.323-1.325v-21.35c0-.732-.593-1.325-1.325-1.325z"/></svg>
+          Continuar com Facebook
+        </button>
+      </div>
+
+      <div class="auth-divider hidden">
+        <span>ou entre com Login e Senha</span>
+      </div>
+
+      <!-- Formulário Tradicional Login e Senha -->
+      <form id="authForm" onsubmit="handleCredentialLogin(event)">
+        <div id="nameFieldGroup" class="form-group hidden">
+          <label for="authName">Nome Completo do Estudante</label>
+          <input type="text" id="authName" placeholder="Ex: Luan Gabriel Lins Galvão">
+        </div>
+        <div class="form-group">
+          <label for="authLoginUser">E-mail</label>
+          <input type="email" id="authLoginUser" required placeholder="seu@email.com">
+        </div>
+        <div class="form-group">
+          <label for="authPass">Senha</label>
+          <input type="password" id="authPass" required placeholder="••••••••">
+        </div>
+        <button type="submit" id="authSubmitBtn" class="btn btn-primary btn-full">Entrar com Login e Senha</button>
+      </form>
+
+      <div class="auth-switch">
+        <span id="authSwitchText">Ainda não possui conta?</span>
+        <button type="button" id="authSwitchBtn" onclick="toggleAuthMode()">Criar conta gratuita</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Banner Hero Educativo -->
+  <section class="hero-banner">
+    <div class="hero-content">
+      <div class="hero-badge">Ementa Completa • Prof. Marcelo Lopes • 4 Unidades</div>
+      <h2>Modelagem e Simulação Matemática por Módulos & Níveis</h2>
+      <p>Do <strong>Nível Iniciante (Conjuntos & Lógica)</strong> ao <strong>Nível Especialista (Modelagem Matemática Aplicada)</strong>, passando por <strong>Espaços Euclidianos</strong>, <strong>Transformações Lineares</strong>, <strong>P.A./P.G.</strong> e <strong>Teoria de Filas</strong> com videoaulas, exercícios comentados, quiz por nível e mentoria da <strong>Tutora IA Camile Dias</strong>!</p>
+      <div class="hero-actions">
+        <a href="#modulos" class="btn btn-primary">📚 Ver Módulos por Nível</a>
+        {% if current_user %}<a href="{{ url_for('dashboard') }}" class="btn btn-secondary">📊 Continuar minha trilha</a>
+        {% else %}<a href="{{ url_for('login_page') }}" class="btn btn-secondary">🔐 Criar conta para começar</a>{% endif %}
+      </div>
+    </div>
+    <div class="hero-card">
+      <div class="card-icon">🇧🇷</div>
+      <h3 id="welcomeUserTitle">{% if current_user %}Olá, {{ current_user.name.split(' ')[0] }}!{% else %}Seu progresso começa do zero{% endif %}</h3>
+      <p id="welcomeUserSub">{% if current_user %}{{ stats.completed_modules }} de {{ stats.total_modules }} módulos concluídos{% else %}Crie uma conta para liberar o Módulo 1{% endif %}</p>
+      <div class="progress-bar-container">
+        <div class="progress-bar-fill" id="mainProgressFill" style="width: {{ stats.progress_percent }}%;">{{ stats.progress_percent }}%</div>
+      </div>
+      <div class="cronograma-mini">
+        <span>📅 AV1: 01/10</span> • <span>AV3: 12/11</span> • <span>AV2: 26/11</span> • <span>AV4: 10/12</span>
+      </div>
+    </div>
+  </section>
+
+  <main class="main-container">
+    <!-- =====================================================================
+         SEÇÃO 1: OS 4 MÓDULOS POR NÍVEL (EMENTA COMPLETA)
+         ===================================================================== -->
+    <section id="modulos" class="section-box">
+      <div class="section-header">
+        <span class="tag-title">Ementa Oficial • Unidades I a IV</span>
+        <h2>Módulos Estruturados por Nível de Progressão</h2>
+        <p>Cada unidade do curso foi organizada em níveis estilo Busuu com videoaulas, exercícios e quiz dedicado.</p>
+      </div>
+
+      <div class="modules-grid-4">
+        <!-- Módulo 1 - Nível 1 -->
+        <article class="module-card level-card-1">
+          <div class="module-top-row">
+            <span class="module-badge">Unidade I • Módulo 01</span>
+            <span class="level-pill lvl-1">⭐ Nível 1: Iniciante</span>
+          </div>
+          <div class="module-icon">📊</div>
+          <h3>Conjuntos & Lógica Matemática</h3>
+          <p>Fundamentos de raciocínio formal, estruturas discretas e técnicas de demonstração.</p>
+          <ul class="topic-list">
+            <li><strong>1.1 Conjuntos:</strong> Vazio (&empty;), unitário, conjuntos numéricos, pertinência (&isin;), contingência/inclusão (&sube;) e operações (&cup;, &cap;, &minus;).</li>
+            <li><strong>1.2 Lógica & Demonstração:</strong> Frase vs. proposição, tautologia, contingência e contradição.</li>
+            <li><strong>1.3 Conectivos & Quantificadores:</strong> Tabelas-verdade (&and;, &lor;, &not;, &rarr;, &harr;), quantificador universal (&forall;) e existencial (&exist;).</li>
+          </ul>
+          <div class="module-footer-btns">
+            <button type="button" class="btn-mod-jump" onclick="jumpToSectionWithFilter('videos', 'mod1')">🎥 Vídeos</button>
+            <button type="button" class="btn-mod-jump" onclick="jumpToSectionWithFilter('exercicios', 'mod1')">💡 Exercícios</button>
+            <button type="button" class="btn-mod-jump primary-jump" onclick="jumpToQuizModule('mod1')">🎯 Quiz Nível 1</button>
+          </div>
+        </article>
+
+        <!-- Módulo 2 - Nível 2 -->
+        <article class="module-card level-card-2">
+          <div class="module-top-row">
+            <span class="module-badge">Unidade II • Módulo 02</span>
+            <span class="level-pill lvl-2">⭐⭐ Nível 2: Intermediário</span>
+          </div>
+          <div class="module-icon">📐</div>
+          <h3>Espaços Euclidianos</h3>
+          <p>Álgebra vetorial multidimensional e estrutura geométrica dos espaços $\mathbb{R}^n$.</p>
+          <ul class="topic-list">
+            <li><strong>2.1 Espaço Vetorial:</strong> Conceito, axiomas e estrutura dos Espaços Euclidianos ($\mathbb{R}^2, \mathbb{R}^3, \mathbb{R}^n$).</li>
+            <li><strong>2.2 Subespaços Vetoriais:</strong> Propriedades de fechamento para soma e multiplicação por escalar.</li>
+            <li><strong>2.3 Base e Dimensão:</strong> Combinação linear, espaços finitamente gerados, dependência (LD) e independência linear (LI).</li>
+          </ul>
+          <div class="module-footer-btns">
+            <button type="button" class="btn-mod-jump" onclick="jumpToSectionWithFilter('videos', 'mod2')">🎥 Vídeos</button>
+            <button type="button" class="btn-mod-jump" onclick="jumpToSectionWithFilter('exercicios', 'mod2')">💡 Exercícios</button>
+            <button type="button" class="btn-mod-jump primary-jump" onclick="jumpToQuizModule('mod2')">🎯 Quiz Nível 2</button>
+          </div>
+        </article>
+
+        <!-- Módulo 3 - Nível 3 -->
+        <article class="module-card level-card-3">
+          <div class="module-top-row">
+            <span class="module-badge">Unidade III • Módulo 03</span>
+            <span class="level-pill lvl-3">⭐⭐⭐ Nível 3: Avançado</span>
+          </div>
+          <div class="module-icon">🔄</div>
+          <h3>Transformações Lineares</h3>
+          <p>Mapeamentos estruturais entre espaços vetoriais euclidianos e representações matriciais.</p>
+          <ul class="topic-list">
+            <li><strong>3.1 Conceito e Estrutura:</strong> Preservação da soma $T(u+v) = T(u)+T(v)$ e escalar $T(lpha u) = lpha T(u)$.</li>
+            <li><strong>3.2 Núcleo e Imagem:</strong> $\ker(T)$ e $	ext{Im}(T)$; classificação em transformações injetoras, sobrejetoras e bijetoras.</li>
+            <li><strong>3.3 Isomorfismos:</strong> Transformações lineares inversíveis e equivalência estrutural entre espaços.</li>
+          </ul>
+          <div class="module-footer-btns">
+            <button type="button" class="btn-mod-jump" onclick="jumpToSectionWithFilter('videos', 'mod3')">🎥 Vídeos</button>
+            <button type="button" class="btn-mod-jump" onclick="jumpToSectionWithFilter('exercicios', 'mod3')">💡 Exercícios</button>
+            <button type="button" class="btn-mod-jump primary-jump" onclick="jumpToQuizModule('mod3')">🎯 Quiz Nível 3</button>
+          </div>
+        </article>
+
+        <!-- Módulo 4 - Nível 4 -->
+        <article class="module-card level-card-4">
+          <div class="module-top-row">
+            <span class="module-badge">Unidade IV • Módulo 04</span>
+            <span class="level-pill lvl-4">👑 Nível 4: Master</span>
+          </div>
+          <div class="module-icon">📈</div>
+          <h3>Sequências (P.A./P.G.) & Teoria de Filas</h3>
+          <p>Modelagem discreta de crescimento e simulação estocástica de atendimento e sistemas.</p>
+          <ul class="topic-list">
+            <li><strong>4.1 Sequências Numéricas:</strong> Definição e características de Progressão Aritmética (P.A.) e Progressão Geométrica (P.G.).</li>
+            <li><strong>4.2 Fórmulas de Cálculo:</strong> Termo geral ($a_n$) e soma dos $n$ primeiros termos ($S_n$) na P.A. e na P.G.</li>
+            <li><strong>4.3 Teoria de Filas:</strong> Taxa de chegada ($\lambda$), taxa de serviço ($\mu$), servidores, disciplina FIFO e simulação.</li>
+          </ul>
+          <div class="module-footer-btns">
+            <button type="button" class="btn-mod-jump" onclick="jumpToSectionWithFilter('videos', 'mod4')">🎥 Vídeos</button>
+            <button type="button" class="btn-mod-jump" onclick="jumpToSectionWithFilter('exercicios', 'mod4')">💡 Exercícios</button>
+            <button type="button" class="btn-mod-jump primary-jump" onclick="jumpToQuizModule('mod4')">🎯 Quiz Nível 4</button>
+          </div>
+        </article>
+
+        <!-- Módulo 5 - Modelagem Matemática Aplicada -->
+        <article class="module-card level-card-5">
+          <div class="module-top-row">
+            <span class="module-badge">Trilha Aplicada • Módulo 05</span>
+            <span class="level-pill lvl-4">🧩 Nível 5: Especialista</span>
+          </div>
+          <div class="module-icon">🧩</div>
+          <h3>Modelagem Matemática Aplicada</h3>
+          <p>Do problema real ao modelo: hipóteses, calibração, validação, simulação e decisão.</p>
+          <ul class="topic-list">
+            <li><strong>5.1 Ciclo de Modelagem:</strong> Problema, variáveis, parâmetros, hipóteses e formulação.</li>
+            <li><strong>5.2 Modelos:</strong> Crescimento linear, exponencial e logístico.</li>
+            <li><strong>5.3 Validação:</strong> Resíduos, erro, cenários e análise de sensibilidade.</li>
+          </ul>
+          <div class="module-footer-btns">
+            <a class="btn-mod-jump" href="{{ url_for('module_detail', slug='modelagem-matematica') }}">📖 Estudar</a>
+            <a class="btn-mod-jump" href="{{ url_for('quizzes_page') }}">🧭 Ver trilha</a>
+            <a class="btn-mod-jump primary-jump" href="{{ url_for('quiz_detail', slug='modelagem-matematica') }}">🎯 Quiz de Modelagem</a>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    {% if current_user %}
+    <!-- =====================================================================
+         SEÇÃO 2: VIDEOAULAS DO YOUTUBE POR MÓDULO E NÍVEL
+         ===================================================================== -->
+    <section id="videos" class="section-box">
+      <div class="section-header">
+        <span class="tag-title">Conteúdo Audiovisual Selecionado</span>
+        <h2>Videoaulas do YouTube por Módulo & Nível</h2>
+        <p>Filtre por módulo para assistir às aulas incorporadas ou abrir diretamente no YouTube.</p>
+      </div>
+
+      <!-- Filtro de Vídeos por Módulo e Nível -->
+      <div class="filter-tabs" id="videoFilterTabs">
+        <button type="button" class="filter-tab active" data-filter="all" onclick="filterVideos('all', this)">🌐 Todos os Módulos (8 Aulas)</button>
+        <button type="button" class="filter-tab" data-filter="mod1" onclick="filterVideos('mod1', this)">⭐ Mód. 1 • Iniciante (Conjuntos & Lógica)</button>
+        <button type="button" class="filter-tab" data-filter="mod2" onclick="filterVideos('mod2', this)">⭐⭐ Mód. 2 • Intermediário (Espaços Euclidianos)</button>
+        <button type="button" class="filter-tab" data-filter="mod3" onclick="filterVideos('mod3', this)">⭐⭐⭐ Mód. 3 • Avançado (Transformações Lineares)</button>
+        <button type="button" class="filter-tab" data-filter="mod4" onclick="filterVideos('mod4', this)">👑 Mód. 4 • Master (P.A., P.G. & Filas)</button>
+      </div>
+
+      <div class="video-grid" id="videoGridContainer">
+        <!-- Vídeo Mód 1 - A -->
+        <div class="video-card" data-module="mod1">
+          <div class="video-wrapper">
+            <iframe src="https://www.youtube-nocookie.com/embed/n42-R3i43W0" title="Teoria dos Conjuntos" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+          </div>
+          <div class="video-info">
+            <div class="card-meta-badges">
+              <span class="video-chip">Mód. 1 • Conjuntos</span>
+              <span class="level-tag lvl-1">Nível Iniciante</span>
+            </div>
+            <h4>Teoria dos Conjuntos: Pertinência, Inclusão e Operações</h4>
+            <p>Conjuntos numéricos, união, interseção, diferença e relações de pertinência (&isin;) e continência (&sube;).</p>
+            <a href="https://www.youtube.com/watch?v=n42-R3i43W0" target="_blank" rel="noopener noreferrer" class="yt-external-link">▶ Assistir no YouTube &nearr;</a>
+          </div>
+        </div>
+
+        <!-- Vídeo Mód 1 - B -->
+        <div class="video-card" data-module="mod1">
+          <div class="video-wrapper">
+            <iframe src="https://www.youtube-nocookie.com/embed/zH3bY8LwQio" title="Lógica Proposicional e Tabela-Verdade" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+          </div>
+          <div class="video-info">
+            <div class="card-meta-badges">
+              <span class="video-chip">Mód. 1 • Lógica</span>
+              <span class="level-tag lvl-1">Nível Iniciante</span>
+            </div>
+            <h4>Lógica Matemática: Tabelas-Verdade, Tautologia e Conectivos</h4>
+            <p>Construção de tabelas-verdade, proposições compostas, tautologia, contingência e contradição.</p>
+            <a href="https://www.youtube.com/watch?v=zH3bY8LwQio" target="_blank" rel="noopener noreferrer" class="yt-external-link">▶ Assistir no YouTube &nearr;</a>
+          </div>
+        </div>
+
+        <!-- Vídeo Mód 2 - A -->
+        <div class="video-card" data-module="mod2">
+          <div class="video-wrapper">
+            <iframe src="https://www.youtube-nocookie.com/embed/8mve0UoNLTo" title="Espaços Vetoriais e Subespaços Euclidianos" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+          </div>
+          <div class="video-info">
+            <div class="card-meta-badges">
+              <span class="video-chip chip-blue">Mód. 2 • Espaços Euclidianos</span>
+              <span class="level-tag lvl-2">Nível Intermediário</span>
+            </div>
+            <h4>Espaços Vetoriais Euclidianos e Subespaços Vetoriais</h4>
+            <p>Axiomas de espaço vetorial no $\mathbb{R}^n$ e verificação das condições de subespaço vetorial.</p>
+            <a href="https://www.youtube.com/watch?v=8mve0UoNLTo" target="_blank" rel="noopener noreferrer" class="yt-external-link">▶ Assistir no YouTube &nearr;</a>
+          </div>
+        </div>
+
+        <!-- Vídeo Mód 2 - B -->
+        <div class="video-card" data-module="mod2">
+          <div class="video-wrapper">
+            <iframe src="https://www.youtube-nocookie.com/embed/k7RM-ot2NWY" title="Combinação Linear, Base e Dimensão" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+          </div>
+          <div class="video-info">
+            <div class="card-meta-badges">
+              <span class="video-chip chip-blue">Mód. 2 • Base & Dimensão</span>
+              <span class="level-tag lvl-2">Nível Intermediário</span>
+            </div>
+            <h4>Combinação Linear, Independência Linear (LI/LD), Base e Dimensão</h4>
+            <p>Como identificar vetores linearmente independentes e determinar a base e dimensão de subespaços.</p>
+            <a href="https://www.youtube.com/watch?v=k7RM-ot2NWY" target="_blank" rel="noopener noreferrer" class="yt-external-link">▶ Assistir no YouTube &nearr;</a>
+          </div>
+        </div>
+
+        <!-- Vídeo Mód 3 - A -->
+        <div class="video-card" data-module="mod3">
+          <div class="video-wrapper">
+            <iframe src="https://www.youtube-nocookie.com/embed/kYB8IZa5AuE" title="Transformações Lineares e Matrizes" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+          </div>
+          <div class="video-info">
+            <div class="card-meta-badges">
+              <span class="video-chip chip-yellow">Mód. 3 • Transformações</span>
+              <span class="level-tag lvl-3">Nível Avançado</span>
+            </div>
+            <h4>Transformações Lineares entre Espaços Euclidianos</h4>
+            <p>Compreensão geométrica e algébrica de transformações lineares e matrizes associadas.</p>
+            <a href="https://www.youtube.com/watch?v=kYB8IZa5AuE" target="_blank" rel="noopener noreferrer" class="yt-external-link">▶ Assistir no YouTube &nearr;</a>
+          </div>
+        </div>
+
+        <!-- Vídeo Mód 3 - B -->
+        <div class="video-card" data-module="mod3">
+          <div class="video-wrapper">
+            <iframe src="https://www.youtube-nocookie.com/embed/uQhTuRlWMxw" title="Núcleo, Imagem e Isomorfismos" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+          </div>
+          <div class="video-info">
+            <div class="card-meta-badges">
+              <span class="video-chip chip-yellow">Mód. 3 • Isomorfismos</span>
+              <span class="level-tag lvl-3">Nível Avançado</span>
+            </div>
+            <h4>Núcleo, Imagem, Transformações Inversíveis e Isomorfismos</h4>
+            <p>Teorema do Núcleo e da Imagem, injetividade, sobrejetividade e bijetividade (isomorfismos).</p>
+            <a href="https://www.youtube.com/watch?v=uQhTuRlWMxw" target="_blank" rel="noopener noreferrer" class="yt-external-link">▶ Assistir no YouTube &nearr;</a>
+          </div>
+        </div>
+
+        <!-- Vídeo Mód 4 - A -->
+        <div class="video-card" data-module="mod4">
+          <div class="video-wrapper">
+            <iframe src="https://www.youtube-nocookie.com/embed/V-202g4h8-4" title="Progressão Aritmética e Geométrica" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+          </div>
+          <div class="video-info">
+            <div class="card-meta-badges">
+              <span class="video-chip chip-green">Mód. 4 • Sequências</span>
+              <span class="level-tag lvl-4">Nível Master</span>
+            </div>
+            <h4>Sequências: Progressão Aritmética (P.A.) e Geométrica (P.G.)</h4>
+            <p>Cálculo do termo geral e soma dos termos de uma P.A. e P.G. aplicados à modelagem.</p>
+            <a href="https://www.youtube.com/watch?v=V-202g4h8-4" target="_blank" rel="noopener noreferrer" class="yt-external-link">▶ Assistir no YouTube &nearr;</a>
+          </div>
+        </div>
+
+        <!-- Vídeo Mód 4 - B -->
+        <div class="video-card" data-module="mod4">
+          <div class="video-wrapper">
+            <iframe src="https://www.youtube-nocookie.com/embed/xG36l7z_7W0" title="Teoria de Filas e Simulação" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+          </div>
+          <div class="video-info">
+            <div class="card-meta-badges">
+              <span class="video-chip chip-green">Mód. 4 • Teoria de Filas</span>
+              <span class="level-tag lvl-4">Nível Master</span>
+            </div>
+            <h4>Teoria de Filas e Simulação de Sistemas (Modelo M/M/1)</h4>
+            <p>Elementos da Teoria de Filas: taxa de chegada, taxa de atendimento, capacidade e simulação.</p>
+            <a href="https://www.youtube.com/watch?v=xG36l7z_7W0" target="_blank" rel="noopener noreferrer" class="yt-external-link">▶ Assistir no YouTube &nearr;</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         SEÇÃO 3: MÓDULO DICAS IA • TUTORA CAMILE DIAS
+         ===================================================================== -->
+    <section id="tutor-ia" class="section-box">
+      <div class="section-header">
+        <span class="tag-title">Inteligência Artificial Pedagógica</span>
+        <h2>Módulo Dicas IA • Tutora Camile Dias</h2>
+        <p>Tire dúvidas dos 5 módulos: Conjuntos, Lógica, Espaços Euclidianos, Transformações Lineares, P.A./P.G., Teoria de Filas e Modelagem Matemática Aplicada.</p>
+      </div>
+
+      <div class="tutor-ia-card">
+        <div class="tutor-profile-pane">
+          <div class="tutor-avatar-ring">
+            <div class="tutor-avatar">👩‍🏫</div>
+            <span class="online-dot" title="Online agora"></span>
+          </div>
+          <h3>Camile Dias</h3>
+          <span class="tutor-role">Tutora IA • Modelagem Matemática</span>
+          <p class="tutor-bio">Olá! Eu sou a <strong>Camile Dias</strong>. Escolha um módulo abaixo ou digite qualquer pergunta sobre a ementa do Prof. Marcelo Lopes!</p>
+          
+          <div class="quick-prompts">
+            <span class="prompts-label">Dicas rápidas por Módulo:</span>
+            <button type="button" class="chip-prompt" onclick="askCamilePreset('Módulo 1: Tautologia, Contingência e Contradição')">⭐ Mód. 1: Tautologia vs Contradição</button>
+            <button type="button" class="chip-prompt" onclick="askCamilePreset('Módulo 2: Como saber se vetores são LI ou LD e achar a Base?')">⭐⭐ Mód. 2: Vetores LI/LD, Base e Dimensão</button>
+            <button type="button" class="chip-prompt" onclick="askCamilePreset('Módulo 3: O que é Núcleo, Imagem e Isomorfismo?')">⭐⭐⭐ Mód. 3: Núcleo, Imagem e Isomorfismo</button>
+            <button type="button" class="chip-prompt" onclick="askCamilePreset('Módulo 4: Fórmulas de P.A., P.G. e Teoria de Filas')">👑 Mód. 4: P.A., P.G. e Teoria de Filas</button>
+          </div>
+        </div>
+
+        <div class="tutor-chat-pane">
+          <div class="chat-header-bar">
+            <span>💬 Mentoria Interativa em Tempo Real (Unidades I a IV)</span>
+            <button type="button" class="btn-clear-chat" onclick="clearCamileChat()">Limpar conversa</button>
+          </div>
+          
+          <div id="camileChatMessages" class="chat-messages-box">
+            <div class="msg-bubble msg-tutor">
+              <strong>Camile Dias (Tutora IA):</strong> Oi! Estou atualizada com toda a ementa de <strong>Modelagem e Simulação Matemática</strong> (Conjuntos, Lógica, Espaços Euclidianos, Transformações Lineares, P.A./P.G. e Teoria de Filas). Clique em um tópico ao lado ou escreva sua pergunta! 🚀
+            </div>
+          </div>
+
+          <form class="chat-input-form" onsubmit="handleCamileSubmit(event)">
+            <input type="text" id="camileUserInput" placeholder="Ex: Camile, como calcular o termo geral de uma P.G. ou o núcleo de T?" autocomplete="off">
+            <button type="submit" class="btn btn-primary">Enviar</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         SEÇÃO 4: LABORATÓRIO DE SIMULADORES (1 SIMULADOR POR MÓDULO)
+         ===================================================================== -->
+    <section id="lab-simuladores" class="section-box">
+      <div class="section-header">
+        <span class="tag-title">Laboratório Interativo</span>
+        <h2>Simuladores Práticos dos 4 Módulos</h2>
+        <p>Experimente cálculos de Conjuntos/Lógica, Espaços Euclidianos, Transformações Lineares e P.A./P.G./Filas.</p>
+      </div>
+
+      <div class="simulators-wrapper">
+        <!-- Simulador Módulo 1 -->
+        <div class="sim-card">
+          <div class="sim-header">
+            <span class="sim-badge">Módulo 01 • Nível Iniciante</span>
+            <h3>Operações de Conjuntos & Tabela-Verdade</h3>
+          </div>
+          <div class="sim-body">
+            <div class="input-group">
+              <label for="setA">Conjunto A:</label>
+              <input type="text" id="setA" value="1, 2, 3, 4">
+            </div>
+            <div class="input-group">
+              <label for="setB">Conjunto B:</label>
+              <input type="text" id="setB" value="3, 4, 5, 6">
+            </div>
+            <button type="button" class="btn btn-primary btn-calc" onclick="calculateSets()">Calcular Conjuntos</button>
+
+            <div class="results-display">
+              <div class="result-row"><strong>União (A &cup; B):</strong> <span id="resUnion">{ 1, 2, 3, 4, 5, 6 }</span></div>
+              <div class="result-row"><strong>Interseção (A &cap; B):</strong> <span id="resIntersection">{ 3, 4 }</span></div>
+              <div class="result-row"><strong>Diferença (A - B):</strong> <span id="resDiffAB">{ 1, 2 }</span></div>
+            </div>
+
+            <div class="toggle-row" style="margin-top: 14px;">
+              <div class="toggle-item">
+                <span>Proposição P:</span>
+                <button type="button" id="toggleP" class="btn-toggle true-val" onclick="toggleVal('P')">V (Verdadeiro)</button>
+              </div>
+              <div class="toggle-item">
+                <span>Proposição Q:</span>
+                <button type="button" id="toggleQ" class="btn-toggle false-val" onclick="toggleVal('Q')">F (Falso)</button>
+              </div>
+            </div>
+            <div class="results-display" id="logicQuickRes">
+              <!-- Atualizado via JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Simulador Módulo 2 -->
+        <div class="sim-card">
+          <div class="sim-header">
+            <span class="sim-badge">Módulo 02 • Nível Intermediário</span>
+            <h3>Espaços Euclidianos: LI/LD & Produto Escalar</h3>
+          </div>
+          <div class="sim-body">
+            <p class="sim-desc">Insira dois vetores $u = (x_1, y_1)$ e $v = (x_2, y_2)$ no Espaço Euclidiano $\mathbb{R}^2$:</p>
+            <div class="dual-input-row">
+              <div class="input-group">
+                <label for="vecU">Vetor u (x1, y1):</label>
+                <input type="text" id="vecU" value="2, 4">
+              </div>
+              <div class="input-group">
+                <label for="vecV">Vetor v (x2, y2):</label>
+                <input type="text" id="vecV" value="1, 2">
+              </div>
+            </div>
+            <button type="button" class="btn btn-primary btn-calc" onclick="calculateEuclidean()">Analisar Vetores em ℝ²</button>
+
+            <div class="results-display" id="euclideanResult">
+              <div class="result-row"><strong>Produto Escalar (u &middot; v):</strong> <span id="resDot">10</span></div>
+              <div class="result-row"><strong>Norma ||u||:</strong> <span id="resNormU">4.47</span></div>
+              <div class="result-row"><strong>Dependência Linear:</strong> <span id="resLILD">LD (Linearmente Dependentes)</span></div>
+              <div class="result-row"><strong>Forma Base de ℝ²?:</strong> <span id="resIsBasis">Não (dimensão gerada = 1)</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Simulador Módulo 3 -->
+        <div class="sim-card">
+          <div class="sim-header">
+            <span class="sim-badge badge-alt">Módulo 03 • Nível Avançado</span>
+            <h3>Transformação Linear $T: \mathbb{R}^2 	o \mathbb{R}^2$</h3>
+          </div>
+          <div class="sim-body">
+            <p class="sim-desc">Defina $T(x, y) = (ax + by,\; cx + dy)$ e verifique se é um <strong>Isomorfismo</strong>:</p>
+            <div class="matrix-grid-inputs">
+              <div><label>a:</label><input type="number" id="matA" value="2"></div>
+              <div><label>b:</label><input type="number" id="matB" value="1"></div>
+              <div><label>c:</label><input type="number" id="matC" value="1"></div>
+              <div><label>d:</label><input type="number" id="matD" value="3"></div>
+            </div>
+            <button type="button" class="btn btn-primary btn-calc" onclick="calculateLinearTransform()">Analisar Transformação & Isomorfismo</button>
+
+            <div class="results-display" id="ltResult">
+              <div class="result-row"><strong>Determinante da Matriz:</strong> <span id="resDet">5</span></div>
+              <div class="result-row"><strong>Núcleo ker(T):</strong> <span id="resKernel">{ (0, 0) } (dim = 0)</span></div>
+              <div class="result-row"><strong>Classificação:</strong> <span id="resIso">Bijetora &rarr; É um ISOMORFISMO (Inversível)!</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Simulador Módulo 4 -->
+        <div class="sim-card">
+          <div class="sim-header">
+            <span class="sim-badge badge-green">Módulo 04 • Nível Master</span>
+            <h3>Calculadora P.A./P.G. & Teoria de Filas (M/M/1)</h3>
+          </div>
+          <div class="sim-body">
+            <div class="dual-input-row">
+              <div class="input-group">
+                <label for="seqA1">1º Termo ($a_1$):</label>
+                <input type="number" id="seqA1" value="2">
+              </div>
+              <div class="input-group">
+                <label for="seqR">Razão ($r$ ou $q$):</label>
+                <input type="number" id="seqR" value="3">
+              </div>
+              <div class="input-group">
+                <label for="seqN">Posição ($n$):</label>
+                <input type="number" id="seqN" value="5" min="1" max="50">
+              </div>
+            </div>
+            <button type="button" class="btn btn-primary btn-calc" onclick="calculateSequencesAndQueue()">Calcular P.A., P.G. e Fila</button>
+
+            <div class="results-display">
+              <div class="result-row"><strong>P.A. ($a_n$ e $S_n$):</strong> <span id="resPA">a₅ = 14 | S₅ = 40</span></div>
+              <div class="result-row"><strong>P.G. ($a_n$ e $S_n$):</strong> <span id="resPG">a₅ = 162 | S₅ = 242</span></div>
+            </div>
+
+            <div class="dual-input-row" style="margin-top: 12px;">
+              <div class="input-group">
+                <label for="queueLambda">Chegada &lambda; (clientes/h):</label>
+                <input type="number" id="queueLambda" value="12">
+              </div>
+              <div class="input-group">
+                <label for="queueMu">Atendimento &mu; (clientes/h):</label>
+                <input type="number" id="queueMu" value="15">
+              </div>
+            </div>
+            <div class="results-display">
+              <div class="result-row"><strong>Taxa de Ocupação (&rho; = &lambda;/&mu;):</strong> <span id="resQueueRho">80.0% (Sistema Estável)</span></div>
+              <div class="result-row"><strong>Média Clientes no Sistema (L):</strong> <span id="resQueueL">4.0 clientes</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         SEÇÃO 5: EXERCÍCIOS COM DICAS POR MÓDULO E NÍVEL
+         ===================================================================== -->
+    <section id="exercicios" class="section-box">
+      <div class="section-header">
+        <span class="tag-title">Listas de Exercícios • Avaliação Processual</span>
+        <h2>Exercícios Comentados por Módulo & Nível</h2>
+        <p>Filtre por módulo/nível, consulte a dica da Tutora Camile Dias e confira a resolução passo a passo.</p>
+      </div>
+
+      <!-- Filtro de Exercícios por Módulo e Nível -->
+      <div class="filter-tabs" id="exFilterTabs">
+        <button type="button" class="filter-tab active" data-filter="all" onclick="filterExercises('all', this)">📚 Todos os Exercícios (8)</button>
+        <button type="button" class="filter-tab" data-filter="mod1" onclick="filterExercises('mod1', this)">⭐ Mód. 1 • Iniciante</button>
+        <button type="button" class="filter-tab" data-filter="mod2" onclick="filterExercises('mod2', this)">⭐⭐ Mód. 2 • Intermediário</button>
+        <button type="button" class="filter-tab" data-filter="mod3" onclick="filterExercises('mod3', this)">⭐⭐⭐ Mód. 3 • Avançado</button>
+        <button type="button" class="filter-tab" data-filter="mod4" onclick="filterExercises('mod4', this)">👑 Mód. 4 • Master</button>
+      </div>
+
+      <div class="exercises-container" id="exercisesListContainer">
+        <!-- Mód 1 - Ex 1 -->
+        <div class="exercise-item" data-module="mod1">
+          <div class="ex-number">1.1</div>
+          <div class="ex-content">
+            <div class="card-meta-badges">
+              <span class="video-chip">Módulo 01 • Conjuntos</span>
+              <span class="level-tag lvl-1">Nível Iniciante</span>
+            </div>
+            <h4>Pertinência (&isin;) vs. Continência (&sube;)</h4>
+            <p>Dado o conjunto $A = \{ 1, 2, \{3\}, 4 \}$, classifique como Verdadeira (V) ou Falsa (F) cada afirmação: I) $\{3\} \in A$; II) $\{3\} \subseteq A$; III) $\emptyset \subseteq A$.</p>
+            <div class="ex-actions">
+              <button type="button" class="btn btn-hint" onclick="toggleElement('hint_m1_1')">💡 Dica da Camile Dias</button>
+              <button type="button" class="btn btn-show-sol" onclick="toggleElement('sol_m1_1')">✅ Ver Gabarito</button>
+            </div>
+            <div id="hint_m1_1" class="hint-box hidden">
+              <strong>Dica da Camile Dias:</strong> Observe que $\{3\}$ aparece literalmente entre vírgulas dentro de $A$, então ele é um <em>elemento</em> de $A$. Para usar $\subseteq$, precisaríamos colocar chaves extras: $\{\{3\}\} \subseteq A$. E lembre-se: o conjunto vazio ($\emptyset$) é subconjunto de qualquer conjunto!
+            </div>
+            <div id="sol_m1_1" class="solution-box hidden">
+              <strong>Resolução:</strong> I) <strong>V</strong> (pois $\{3\}$ é elemento direto de $A$); II) <strong>F</strong> (o correto seria $\{\{3\}\} \subseteq A$); III) <strong>V</strong> (o vazio está contido em todo conjunto).
+            </div>
+          </div>
+        </div>
+
+        <!-- Mód 1 - Ex 2 -->
+        <div class="exercise-item" data-module="mod1">
+          <div class="ex-number">1.2</div>
+          <div class="ex-content">
+            <div class="card-meta-badges">
+              <span class="video-chip">Módulo 01 • Lógica</span>
+              <span class="level-tag lvl-1">Nível Iniciante</span>
+            </div>
+            <h4>Tautologia, Contingência e Contradição</h4>
+            <p>Construa a análise lógica da fórmula composta $P \lor 
+eg P$ e classifique-a quanto ao seu valor-verdade final.</p>
+            <div class="ex-actions">
+              <button type="button" class="btn btn-hint" onclick="toggleElement('hint_m1_2')">💡 Dica da Camile Dias</button>
+              <button type="button" class="btn btn-show-sol" onclick="toggleElement('sol_m1_2')">✅ Ver Gabarito</button>
+            </div>
+            <div id="hint_m1_2" class="hint-box hidden">
+              <strong>Dica da Camile Dias:</strong> Teste os dois casos possíveis: se $P = V$, então $
+eg P = F$, e $V \lor F = V$. Se $P = F$, então $
+eg P = V$, e $F \lor V = V$. Quando a coluna final dá sempre Verdadeiro, como chamamos?
+            </div>
+            <div id="sol_m1_2" class="solution-box hidden">
+              <strong>Resolução:</strong> Trata-se de uma <strong>TAUTOLOGIA</strong> (Princípio do Terceiro Excluído), pois o resultado lógico da disjunção $P \lor 
+eg P$ é sempre Verdadeiro (V) independentemente do valor de $P$.
+            </div>
+          </div>
+        </div>
+
+        <!-- Mód 2 - Ex 1 -->
+        <div class="exercise-item" data-module="mod2">
+          <div class="ex-number">2.1</div>
+          <div class="ex-content">
+            <div class="card-meta-badges">
+              <span class="video-chip chip-blue">Módulo 02 • Subespaços</span>
+              <span class="level-tag lvl-2">Nível Intermediário</span>
+            </div>
+            <h4>Reconhecimento de Subespaço Vetorial</h4>
+            <p>Verifique se o subconjunto $W = \{ (x, y) \in \mathbb{R}^2 \mid y = 3x \}$ é um subespaço vetorial do Espaço Euclidiano $\mathbb{R}^2$.</p>
+            <div class="ex-actions">
+              <button type="button" class="btn btn-hint" onclick="toggleElement('hint_m2_1')">💡 Dica da Camile Dias</button>
+              <button type="button" class="btn btn-show-sol" onclick="toggleElement('sol_m2_1')">✅ Ver Gabarito</button>
+            </div>
+            <div id="hint_m2_1" class="hint-box hidden">
+              <strong>Dica da Camile Dias:</strong> Para ser subespaço vetorial, $W$ precisa cumprir 3 regras: 1) Conter o vetor nulo $(0,0)$; 2) Ser fechado para a soma ($u + v \in W$); 3) Ser fechado para multiplicação por escalar ($lpha u \in W$).
+            </div>
+            <div id="sol_m2_1" class="solution-box hidden">
+              <strong>Resolução:</strong> <strong>Sim, é subespaço!</strong> 1) Para $x=0$, $y=3(0)=0 \Rightarrow (0,0) \in W$. 2) Se $u=(x_1, 3x_1)$ e $v=(x_2, 3x_2)$, então $u+v = (x_1+x_2, 3(x_1+x_2)) \in W$. 3) $lpha u = (lpha x_1, 3(lpha x_1)) \in W$.
+            </div>
+          </div>
+        </div>
+
+        <!-- Mód 2 - Ex 2 -->
+        <div class="exercise-item" data-module="mod2">
+          <div class="ex-number">2.2</div>
+          <div class="ex-content">
+            <div class="card-meta-badges">
+              <span class="video-chip chip-blue">Módulo 02 • Base & Dimensão</span>
+              <span class="level-tag lvl-2">Nível Intermediário</span>
+            </div>
+            <h4>Independência Linear (LI/LD) e Base de $\mathbb{R}^2$</h4>
+            <p>Os vetores $v_1 = (1, 2)$ e $v_2 = (3, 5)$ são Linearmente Independentes (LI)? Eles formam uma base para $\mathbb{R}^2$?</p>
+            <div class="ex-actions">
+              <button type="button" class="btn btn-hint" onclick="toggleElement('hint_m2_2')">💡 Dica da Camile Dias</button>
+              <button type="button" class="btn btn-show-sol" onclick="toggleElement('sol_m2_2')">✅ Ver Gabarito</button>
+            </div>
+            <div id="hint_m2_2" class="hint-box hidden">
+              <strong>Dica da Camile Dias:</strong> Monte uma matriz $2 	imes 2$ com os vetores e calcule o determinante! Se $\det 
+eq 0$, eles não são múltiplos entre si (são LI) e, como $\dim(\mathbb{R}^2) = 2$, dois vetores LI já formam uma base!
+            </div>
+            <div id="sol_m2_2" class="solution-box hidden">
+              <strong>Resolução:</strong> Calculando o determinante: $\det egin{pmatrix} 1 & 3 \ 2 & 5 \end{pmatrix} = (1 \cdot 5) - (3 \cdot 2) = 5 - 6 = -1 
+eq 0$. Como $\det 
+eq 0$, os vetores são <strong>LI</strong> e <strong>formam uma base de $\mathbb{R}^2$</strong>.
+            </div>
+          </div>
+        </div>
+
+        <!-- Mód 3 - Ex 1 -->
+        <div class="exercise-item" data-module="mod3">
+          <div class="ex-number">3.1</div>
+          <div class="ex-content">
+            <div class="card-meta-badges">
+              <span class="video-chip chip-yellow">Módulo 03 • Transformações Lineares</span>
+              <span class="level-tag lvl-3">Nível Avançado</span>
+            </div>
+            <h4>Núcleo e Imagem de uma Transformação Linear</h4>
+            <p>Seja $T: \mathbb{R}^2 	o \mathbb{R}^2$ definida por $T(x, y) = (x - y,\; 2x - 2y)$. Determine o Núcleo $\ker(T)$ e diga se $T$ é injetora.</p>
+            <div class="ex-actions">
+              <button type="button" class="btn btn-hint" onclick="toggleElement('hint_m3_1')">💡 Dica da Camile Dias</button>
+              <button type="button" class="btn btn-show-sol" onclick="toggleElement('sol_m3_1')">✅ Ver Gabarito</button>
+            </div>
+            <div id="hint_m3_1" class="hint-box hidden">
+              <strong>Dica da Camile Dias:</strong> O Núcleo $\ker(T)$ é o conjunto de todos os vetores $(x, y)$ tais que $T(x, y) = (0, 0)$. Lembre-se: $T$ só é injetora se $\ker(T) = \{(0,0)\}$!
+            </div>
+            <div id="sol_m3_1" class="solution-box hidden">
+              <strong>Resolução:</strong> Igualando a zero: $x - y = 0 \Rightarrow x = y$. Logo, $\ker(T) = \{ (x, x) \mid x \in \mathbb{R} \}$, que tem dimensão 1 (ex: vetor $(1,1)$ está no núcleo). Como $\ker(T) 
+eq \{(0,0)\}$, $T$ <strong>não é injetora</strong>.
+            </div>
+          </div>
+        </div>
+
+        <!-- Mód 3 - Ex 2 -->
+        <div class="exercise-item" data-module="mod3">
+          <div class="ex-number">3.2</div>
+          <div class="ex-content">
+            <div class="card-meta-badges">
+              <span class="video-chip chip-yellow">Módulo 03 • Isomorfismos</span>
+              <span class="level-tag lvl-3">Nível Avançado</span>
+            </div>
+            <h4>Identificação de Isomorfismo entre Espaços Euclidianos</h4>
+            <p>Considere $T: \mathbb{R}^2 	o \mathbb{R}^2$ dada por $T(x, y) = (x + y,\; x - y)$. Prove que $T$ é um isomorfismo e encontre sua inversa $T^{-1}(u, v)$.</p>
+            <div class="ex-actions">
+              <button type="button" class="btn btn-hint" onclick="toggleElement('hint_m3_2')">💡 Dica da Camile Dias</button>
+              <button type="button" class="btn btn-show-sol" onclick="toggleElement('sol_m3_2')">✅ Ver Gabarito</button>
+            </div>
+            <div id="hint_m3_2" class="hint-box hidden">
+              <strong>Dica da Camile Dias:</strong> Um operador linear em $\mathbb{R}^n$ é um isomorfismo (bijetor e inversível) se o determinante de sua matriz canônica for diferente de zero! Para achar $T^{-1}$, faça $u = x + y$ e $v = x - y$ e isole $x$ e $y$.
+            </div>
+            <div id="sol_m3_2" class="solution-box hidden">
+              <strong>Resolução:</strong> $\det egin{pmatrix} 1 & 1 \ 1 & -1 \end{pmatrix} = -1 - 1 = -2 
+eq 0 \Rightarrow$ $T$ é bijetora (<strong>isomorfismo</strong>). Somando $u + v = 2x \Rightarrow x = rac{u+v}{2}$, e subtraindo $u - v = 2y \Rightarrow y = rac{u-v}{2}$. Assim, $T^{-1}(u, v) = \left(rac{u+v}{2}, rac{u-v}{2}ight)$.
+            </div>
+          </div>
+        </div>
+
+        <!-- Mód 4 - Ex 1 -->
+        <div class="exercise-item" data-module="mod4">
+          <div class="ex-number">4.1</div>
+          <div class="ex-content">
+            <div class="card-meta-badges">
+              <span class="video-chip chip-green">Módulo 04 • Sequências P.A. & P.G.</span>
+              <span class="level-tag lvl-4">Nível Master</span>
+            </div>
+            <h4>Termo Geral e Soma de Progressão Aritmética e Geométrica</h4>
+            <p>Um servidor processa requisições em lotes que crescem em Progressão Geométrica (P.G.) com $a_1 = 3$ requisições no 1º segundo e razão $q = 2$. Quantas requisições ele processará no 6º segundo ($a_6$) e qual o total acumulado nos 6 segundos ($S_6$)?</p>
+            <div class="ex-actions">
+              <button type="button" class="btn btn-hint" onclick="toggleElement('hint_m4_1')">💡 Dica da Camile Dias</button>
+              <button type="button" class="btn btn-show-sol" onclick="toggleElement('sol_m4_1')">✅ Ver Gabarito</button>
+            </div>
+            <div id="hint_m4_1" class="hint-box hidden">
+              <strong>Dica da Camile Dias:</strong> Use as fórmulas da P.G.: Termo geral $a_n = a_1 \cdot q^{n-1}$ e Soma finita $S_n = rac{a_1 \cdot (q^n - 1)}{q - 1}$.
+            </div>
+            <div id="sol_m4_1" class="solution-box hidden">
+              <strong>Resolução:</strong> Termo geral: $a_6 = 3 \cdot 2^{6-1} = 3 \cdot 32 = \mathbf{96	ext{ requisições}}$. Soma dos 6 primeiros termos: $S_6 = rac{3 \cdot (2^6 - 1)}{2 - 1} = 3 \cdot (64 - 1) = 3 \cdot 63 = \mathbf{189	ext{ requisições}}$.
+            </div>
+          </div>
+        </div>
+
+        <!-- Mód 4 - Ex 2 -->
+        <div class="exercise-item" data-module="mod4">
+          <div class="ex-number">4.2</div>
+          <div class="ex-content">
+            <div class="card-meta-badges">
+              <span class="video-chip chip-green">Módulo 04 • Teoria de Filas</span>
+              <span class="level-tag lvl-4">Nível Master</span>
+            </div>
+            <h4>Modelagem e Simulação com Teoria de Filas (M/M/1)</h4>
+            <p>Em um laboratório da Unijorge com 1 servidor de atendimento, chegam em média $\lambda = 10$ alunos por hora, e o atendimento consegue atender $\mu = 12$ alunos por hora. Calcule a taxa de ocupação ($ho$) e o número médio de alunos no sistema ($L$).</p>
+            <div class="ex-actions">
+              <button type="button" class="btn btn-hint" onclick="toggleElement('hint_m4_2')">💡 Dica da Camile Dias</button>
+              <button type="button" class="btn btn-show-sol" onclick="toggleElement('sol_m4_2')">✅ Ver Gabarito</button>
+            </div>
+            <div id="hint_m4_2" class="hint-box hidden">
+              <strong>Dica da Camile Dias:</strong> Na fila M/M/1, a taxa de utilização é $ho = rac{\lambda}{\mu}$ (deve ser menor que 1 para não colapsar!). O número médio de clientes no sistema é $L = rac{\lambda}{\mu - \lambda}$.
+            </div>
+            <div id="sol_m4_2" class="solution-box hidden">
+              <strong>Resolução:</strong> Taxa de ocupação: $ho = rac{10}{12} pprox \mathbf{0,833\ (83,3\%)}$. Número médio de alunos no sistema: $L = rac{10}{12 - 10} = rac{10}{2} = \mathbf{5	ext{ alunos}}$.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="quiz" class="section-box quiz-home-cta">
+      <div>
+        <span class="tag-title">Avaliação com progresso real</span>
+        <h2>Quizzes que valem XP e desbloqueiam níveis</h2>
+        <p>Seu melhor resultado gera XP. Ao alcançar 70%, o módulo é concluído e o próximo é liberado automaticamente.</p>
+      </div>
+      <div class="quiz-home-actions">
+        <span><strong>{{ stats.xp }} XP</strong> acumulados</span>
+        <a class="btn btn-primary" href="{{ url_for('quizzes_page') }}">Abrir meus quizzes</a>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         SEÇÃO 7: CERTIFICADO OFICIAL
+         ===================================================================== -->
+    {% if stats.completed_modules == stats.total_modules %}
+    <section id="certificado" class="section-box">
+      <div class="section-header">
+        <span class="tag-title">Certificação Acadêmica</span>
+        <h2>Certificado Oficial de Conclusão</h2>
+        <p>Personalize com seu nome e clique em imprimir/salvar PDF.</p>
+      </div>
+
+      <div class="cert-form-box">
+        <div class="cert-input-row">
+          <input type="text" id="studentNameInput" placeholder="Digite seu Nome Completo" value="{{ current_user.name }}">
+          <button type="button" class="btn btn-primary" onclick="updateCertificate()">Atualizar Nome</button>
+          <button type="button" class="btn btn-secondary" onclick="window.print()">🖨️ Baixar / Imprimir PDF</button>
+        </div>
+      </div>
+
+      <div class="certificate-frame" id="printableCert">
+        <div class="cert-border-inner">
+          <div class="cert-header-logos">
+            <div class="cert-logo-left">
+              <span class="cert-symbol">∞</span>
+              <span class="cert-inst-name">ACADEMY INFINITE MATH ULTIMATE</span>
+            </div>
+            <div class="cert-logo-right">
+              <span class="cert-unijorge-badge">UNIJORGE • SALVADOR - BAHIA</span>
+            </div>
+          </div>
+
+          <div class="cert-title">CERTIFICADO DE EXCELÊNCIA ACADÊMICA</div>
+          <div class="cert-subtitle">MODELAGEM E SIMULAÇÃO MATEMÁTICA • TRILHA COMPLETA</div>
+
+          <div class="cert-body-text">
+            Certificamos que o(a) estudante
+          </div>
+
+          <div class="cert-student-name" id="certNameDisplay">
+            {{ current_user.name }}
+          </div>
+
+          <div class="cert-description">
+            Concluiu com êxito os 5 níveis da trilha de <strong>Teoria dos Conjuntos e Lógica Matemática (Nível Iniciante)</strong>, 
+            <strong>Espaços Euclidianos (Nível Intermediário)</strong>, <strong>Transformações Lineares e Isomorfismos (Nível Avançado)</strong>, 
+            <strong>Sequências P.A./P.G. e Teoria de Filas (Nível Master)</strong> e <strong>Modelagem Matemática Aplicada (Nível Especialista)</strong> com mentoria da <strong>Tutora IA Camile Dias</strong>, 
+            na disciplina ministrada pelo <strong>Prof. Marcelo Lopes</strong> (Centro Universitário Jorge Amado).
+          </div>
+
+          <div class="cert-meta-row">
+            <div class="meta-item">
+              <span class="meta-label">Data de Emissão</span>
+              <span class="meta-val">Novembro de 2026</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Carga Horária</span>
+              <span class="meta-val">75 Horas • 5 Níveis</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Validação Digital</span>
+              <span class="meta-val">AIMU-2026-BA-FULL</span>
+            </div>
+          </div>
+
+          <div class="cert-signatures">
+            <div class="sig-block">
+              <div class="sig-line"></div>
+              <strong>Prof. Marcelo Lopes</strong>
+              <span>Modelagem e Simulação Matemática</span>
+              <span>Unijorge • Salvador - BA</span>
+            </div>
+            <div class="sig-badge-seal">
+              <div class="seal-inner">
+                ★ BRASIL ★<br>BAHIA<br>2026.1
+              </div>
+            </div>
+            <div class="sig-block">
+              <div class="sig-line"></div>
+              <strong>Camile Dias (Mentoria IA)</strong>
+              <span>Academy Infinite Math Ultimate</span>
+              <span>Engenharia da Computação</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    {% else %}
+    <section id="certificado" class="certificate-locked">
+      <span class="certificate-lock-icon">🎓</span>
+      <div><span class="tag-title">Certificado bloqueado</span><h2>Conclua os 5 módulos para emitir</h2><p>Você concluiu {{ stats.completed_modules }} de {{ stats.total_modules }} módulos. Continue sua trilha para liberar o certificado.</p></div>
+      <a class="btn btn-primary" href="{{ url_for('dashboard') }}">Ver meu progresso</a>
+    </section>
+    {% endif %}
+    {% else %}
+    <section class="locked-home-section">
+      <div class="locked-home-icon">🔐</div>
+      <span class="tag-title">Conteúdo protegido</span>
+      <h2>Aulas, simuladores e quizzes são liberados com sua conta</h2>
+      <p>Você começa com 0 XP. Estude o primeiro módulo, alcance 70% no quiz e desbloqueie o próximo nível. Cada dia de atividade aumenta sua ofensiva.</p>
+      <a class="btn btn-primary" href="{{ url_for('login_page') }}">Criar conta gratuita</a>
+      <a class="btn btn-secondary" href="{{ url_for('login_page') }}">Já tenho uma conta</a>
+    </section>
+    {% endif %}
+  </main>
+
+  <!-- Rodapé com Redes Sociais, GitHub e YouTube -->
+  <footer class="app-footer">
+    <div class="footer-container">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <span class="footer-logo">∞ Academy Infinite Math Ultimate</span>
+          <p>Plataforma gamificada estilo Busuu com cores do Brasil & Bahia • Ementa Completa Unijorge.</p>
+        </div>
+
+        <div class="footer-social-links">
+          <a href="https://github.com/LuanEngenheiroBA" target="_blank" rel="noopener noreferrer" class="social-pill github-pill">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+            GitHub
+          </a>
+          <a href="https://www.linkedin.com/in/luan-gabriel-lins-galv%C3%A3o" target="_blank" rel="noopener noreferrer" class="social-pill linkedin-pill">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+            LinkedIn
+          </a>
+          <a href="https://www.youtube.com" target="_blank" rel="noopener noreferrer" class="social-pill youtube-pill">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+            YouTube
+          </a>
+          <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer" class="social-pill instagram-pill">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+            Instagram
+          </a>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>&copy; 2026 Academy Infinite Math Ultimate • Todos os direitos reservados.</p>
+        <div class="footer-badges">
+          <span>5 Módulos & Níveis</span>
+          <span>Tutora IA Camile Dias</span>
+          <span>Cores Brasil & Bahia</span>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Toast de Notificação -->
+  <div id="toastNotification" class="toast hidden"></div>
+
+  <script src="{{ url_for('static', filename='js/common.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/index.js') }}"></script>
+</body>
+</html>

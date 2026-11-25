@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Meu painel | Academy Infinite Math{% endblock %}
+{% block content %}
+{% if request.args.get('locked') %}
+<div class="dashboard-alert">🔒 Este nível ainda está bloqueado. Conclua o módulo atual com pelo menos 70% para avançar.</div>
+{% endif %}
+<section class="dashboard-welcome">
+  <div>
+    <span class="eyebrow">Meu painel</span>
+    <h2>Olá, {{ current_user.name.split(' ')[0] }}.</h2>
+    <p>Continue sua trilha. Cada melhor resultado aumenta seu XP e um dia com estudo mantém sua ofensiva ativa.</p>
+  </div>
+  <button id="logoutButton" class="btn btn-secondary" type="button">Sair da conta</button>
+</section>
+
+<section class="stats-grid" aria-label="Resumo do progresso">
+  <article class="metric-card metric-xp"><span>⚡ Experiência</span><strong data-stat="xp">{{ stats.xp }} XP</strong><small>Nível {{ stats.level }}</small></article>
+  <article class="metric-card metric-streak"><span>🔥 Ofensiva atual</span><strong data-stat="streak">{{ stats.streak }} {{ 'dia' if stats.streak == 1 else 'dias' }}</strong><small>Recorde: {{ stats.longest_streak }} dias</small></article>
+  <article class="metric-card metric-complete"><span>✓ Módulos concluídos</span><strong>{{ stats.completed_modules }}/{{ stats.total_modules }}</strong><small>Aprovação mínima: 70%</small></article>
+  <article class="metric-card metric-progress"><span>◉ Progresso geral</span><strong>{{ stats.progress_percent }}%</strong><small>Baseado no melhor resultado</small></article>
+</section>
+
+<section class="dashboard-progress">
+  <div class="section-heading"><span>Sua jornada</span><h3>Trilha de aprendizagem</h3></div>
+  <div class="journey-list">
+    {% for module in module_states %}
+    <article class="journey-item {% if module.completed %}complete{% elif module.unlocked %}current{% else %}locked{% endif %}">
+      <div class="journey-icon">{{ module.icon }}</div>
+      <div class="journey-copy">
+        <span>Módulo {{ module.number }} • {{ module.level }}</span>
+        <h4>{{ module.title }}</h4>
+        {% if module.completed %}<p>Concluído • melhor resultado {{ module.best_score }}%</p>
+        {% elif module.unlocked %}<p>Disponível agora • melhor resultado {{ module.best_score }}%</p>
+        {% else %}<p>Conclua o módulo anterior para desbloquear</p>{% endif %}
+      </div>
+      {% if module.unlocked %}
+      <a class="btn {{ 'btn-secondary' if module.completed else 'btn-primary' }}" href="{{ url_for('module_detail', slug=module.slug) }}">{{ 'Revisar' if module.completed else 'Continuar' }}</a>
+      {% else %}<span class="journey-lock">🔒</span>{% endif %}
+    </article>
+    {% endfor %}
+  </div>
+</section>
+
+{% if recent_attempts %}
+<section class="attempts-section">
+  <div class="section-heading"><span>Atividade</span><h3>Tentativas recentes</h3></div>
+  <div class="attempts-table">
+    {% for attempt in recent_attempts %}
+    <div><span>{{ module_titles.get(attempt.module_slug, attempt.module_slug) }}</span><strong>{{ ((attempt.score / attempt.total) * 100)|round|int }}%</strong></div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+{% endblock %}

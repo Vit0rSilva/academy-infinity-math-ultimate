@@ -1,0 +1,5 @@
+{% extends "base.html" %}
+{% block title %}Página não encontrada{% endblock %}
+{% block content %}
+<section class="empty-state"><span>∞</span><h2>Página não encontrada</h2><p>O conteúdo procurado não existe ou mudou de endereço.</p><a class="btn btn-primary" href="{{ url_for('home') }}">Voltar ao início</a></section>
+{% endblock %}

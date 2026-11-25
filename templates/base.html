@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Plataforma de Modelagem e Simulação Matemática com módulos, quizzes e acompanhamento de progresso.">
+  <title>{% block title %}Academy Infinite Math Ultimate{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}">
+  {% block head %}{% endblock %}
+</head>
+<body class="page-shell">
+  <div class="top-brazil-bahia-bar"></div>
+  <header class="app-header page-header">
+    <div class="header-container">
+      <a class="brand-box brand-link" href="{{ url_for('home') }}">
+        <div class="brand-icon">∞</div>
+        <div class="brand-text">
+          <h1>Academy Infinite Math</h1>
+          <span class="sub-badge">Modelagem Matemática • 2026</span>
+        </div>
+      </a>
+      <nav class="nav-links page-nav" aria-label="Navegação principal">
+        <a href="{{ url_for('home') }}" class="nav-item">Início</a>
+        <a href="{{ url_for('modules_page') }}" class="nav-item">Módulos</a>
+        {% if current_user %}
+        <a href="{{ url_for('dashboard') }}" class="nav-item">Meu painel</a>
+        <a href="{{ url_for('quizzes_page') }}" class="nav-item">Quizzes</a>
+        {% endif %}
+      </nav>
+      <div class="user-controls">
+        {% if current_user %}
+        <div class="user-stats compact-stats">
+          <div class="stat-pill streak" title="Ofensiva atual">🔥 <span data-stat="streak">{{ stats.streak }}</span></div>
+          <div class="stat-pill xp" title="Experiência acumulada">⚡ <span data-stat="xp">{{ stats.xp }}</span> XP</div>
+        </div>
+        <a id="accountLink" href="{{ url_for('dashboard') }}" class="btn-login-nav logged-in">{{ current_user.name.split(' ')[0] }}</a>
+        {% else %}
+        <span id="sessionLabel" class="session-label">Visitante</span>
+        <a id="accountLink" href="{{ url_for('login_page') }}" class="btn-login-nav">Entrar</a>
+        {% endif %}
+      </div>
+    </div>
+  </header>
+  <main class="content-shell">
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="simple-footer">
+    <span>∞ Academy Infinite Math Ultimate</span>
+    <span>Aprenda • Modele • Simule • Valide</span>
+  </footer>
+  <div id="toastNotification" class="toast hidden" role="status"></div>
+  <script src="{{ url_for('static', filename='js/common.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

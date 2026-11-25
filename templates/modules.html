@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Módulos | Academy Infinite Math{% endblock %}
+{% block content %}
+<section class="page-hero compact-hero">
+  <div>
+    <span class="eyebrow">Trilha completa</span>
+    <h2>Aprenda matemática construindo modelos</h2>
+    <p>Cinco módulos progressivos conectam fundamentos, álgebra linear, sequências, filas e o ciclo completo da modelagem matemática.</p>
+  </div>
+  <div class="hero-stat"><strong>5</strong><span>módulos</span></div>
+</section>
+
+<section class="catalog-section">
+  <div class="catalog-grid">
+    {% for module in module_states %}
+    <article class="catalog-card {% if module.number == 5 %}featured-module{% endif %} {% if not module.unlocked %}locked-card{% endif %}">
+      <div class="catalog-card-top">
+        <span class="module-number">Módulo {{ '%02d'|format(module.number) }}</span>
+        {% if module.completed %}<span class="state-badge complete">Concluído</span>
+        {% elif module.unlocked %}<span class="state-badge available">Disponível</span>
+        {% else %}<span class="state-badge locked">{{ 'Entre para acessar' if not current_user else 'Bloqueado' }}</span>{% endif %}
+      </div>
+      <div class="catalog-icon">{{ module.icon }}</div>
+      <h3>{{ module.title }}</h3>
+      <p>{{ module.summary }}</p>
+      <div class="objective-preview">
+        {% for objective in module.objectives[:2] %}<span>✓ {{ objective }}</span>{% endfor %}
+      </div>
+      <div class="card-actions">
+        {% if module.unlocked %}
+        <a class="btn btn-primary" href="{{ url_for('module_detail', slug=module.slug) }}">{{ 'Revisar módulo' if module.completed else 'Abrir módulo' }}</a>
+        <a class="text-action" href="{{ url_for('quiz_detail', slug=module.slug) }}">Fazer quiz</a>
+        {% elif not current_user %}
+        <a class="btn btn-primary" href="{{ url_for('login_page', next=url_for('module_detail', slug=module.slug)) }}">Entrar para acessar</a>
+        {% else %}
+        <span class="locked-message">🔒 Conclua o módulo anterior</span>
+        {% endif %}
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

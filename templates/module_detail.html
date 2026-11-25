@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}{{ module.title }} | Academy Infinite Math{% endblock %}
+{% block content %}
+<nav class="breadcrumb" aria-label="Navegação estrutural">
+  <a href="{{ url_for('modules_page') }}">Módulos</a><span>›</span><span>{{ module.title }}</span>
+</nav>
+
+<section class="module-detail-hero">
+  <div class="detail-icon">{{ module.icon }}</div>
+  <div>
+    <span class="eyebrow">Módulo {{ '%02d'|format(module.number) }} • {{ module.level }}</span>
+    <h2>{{ module.title }}</h2>
+    <p>{{ module.summary }}</p>
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('quiz_detail', slug=module.slug) }}">Testar conhecimentos</a>
+</section>
+
+<div class="detail-layout">
+  <section class="lesson-column">
+    <div class="section-heading"><span>Conteúdo</span><h3>Roteiro de aprendizagem</h3></div>
+    {% for lesson in module.lessons %}
+    <article class="lesson-card">
+      <span class="lesson-index">{{ '%02d'|format(loop.index) }}</span>
+      <div><h4>{{ lesson.title }}</h4><p>{{ lesson.body }}</p></div>
+    </article>
+    {% endfor %}
+    <article class="worked-example">
+      <span>Exemplo aplicado</span>
+      <p>{{ module.example }}</p>
+    </article>
+  </section>
+  <aside class="objectives-card">
+    <span class="eyebrow">Ao concluir</span>
+    <h3>Você será capaz de</h3>
+    <ul>{% for objective in module.objectives %}<li>{{ objective }}</li>{% endfor %}</ul>
+    <a class="btn btn-primary btn-full" href="{{ url_for('quiz_detail', slug=module.slug) }}">Iniciar quiz</a>
+    <a class="back-link" href="{{ url_for('modules_page') }}">← Ver todos os módulos</a>
+  </aside>
+</div>
+{% endblock %}

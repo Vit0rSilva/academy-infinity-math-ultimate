@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Quiz: {{ module.title }} | Academy Infinite Math{% endblock %}
+{% block content %}
+<nav class="breadcrumb"><a href="{{ url_for('quizzes_page') }}">Quizzes</a><span>›</span><span>{{ module.title }}</span></nav>
+<section class="quiz-page" data-quiz-slug="{{ module.slug }}">
+  <div class="quiz-page-head">
+    <div class="detail-icon">{{ module.icon }}</div>
+    <div>
+      <span class="eyebrow">Quiz • Módulo {{ module.number }}</span>
+      <h2>{{ module.title }}</h2>
+      <p>Selecione uma alternativa em cada questão. É preciso obter pelo menos 70% para concluir.</p>
+    </div>
+  </div>
+  <div class="quiz-progress-track"><div id="quizProgressBar"></div></div>
+  <form id="dedicatedQuizForm" class="dedicated-quiz-form">
+    <div id="quizLoading" class="loading-card">Preparando as questões…</div>
+    <div id="quizQuestions"></div>
+    <button id="submitQuizBtn" class="btn btn-primary quiz-submit" type="submit" hidden>Corrigir respostas</button>
+  </form>
+  <section id="quizResult" class="quiz-result-panel hidden" aria-live="polite"></section>
+</section>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/quiz-page.js') }}"></script>{% endblock %}
